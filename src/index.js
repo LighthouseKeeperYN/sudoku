@@ -15,9 +15,6 @@ module.exports = function solveSudoku(matrix) {
 
     for (let squareRow = 0; squareRow < 3; squareRow++) {
       for (let squareCol = 0; squareCol < 3; squareCol++) {
-        if (row === 6 && col === 0) {
-        }
-
         if (matrixInput[squareY + squareRow][squareX + squareCol] === numInput) return false;
       }
     }
