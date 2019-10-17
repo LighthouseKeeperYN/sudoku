@@ -1,47 +1,52 @@
 module.exports = function solveSudoku(matrix) {
 
-  function possibleNumbers(y, x) {
-    let result = [];
+  function crossScan(matrixInput, numInput, row, col) {
+    for (let i = 0; i < 9; i++) {
+      if (matrixInput[row][i] === numInput) return false;
+      if (matrixInput[i][col] === numInput) return false;
+    }
 
-    for (let num = 1; num < 10; num++) {
-      if (matrix[y].indexOf(num) === -1) {
-        for (let col = 0; col < 9; col++) {
-          if (matrix[col][x] === num) break
-          else if (col === 8) {
-            let boxY = Math.floor(y / 3) * 3;
-            let boxX = Math.floor(x / 3) * 3;
-            let token = true;
+    return true;
+  }
 
-            for (let boxCol = 0; boxCol < 3; boxCol++) {
-              for (let boxRow = 0; boxRow < 3; boxRow++) {
-                if (matrix[boxY + boxCol][boxX + boxRow] === num) {
-                  token = false;
-                  break;
-                }
-              }
-              if (!token) break;
+  function squareScan(matrixInput, numInput, row, col) {
+    let squareY = Math.floor(row / 3) * 3;
+    let squareX = Math.floor(col / 3) * 3;
+
+    for (let squareRow = 0; squareRow < 3; squareRow++) {
+      for (let squareCol = 0; squareCol < 3; squareCol++) {
+        if (row === 6 && col === 0) {
+        }
+
+        if (matrixInput[squareY + squareRow][squareX + squareCol] === numInput) return false;
+      }
+    }
+
+    return true;
+  }
+
+  function solve(matrix) {
+    for (let y = 0; y < 9; y++) {
+      for (let x = 0; x < 9; x++) {
+        if (matrix[y][x] === 0) {
+          for (let num = 1; num < 10; num++) {
+            if (crossScan(matrix, num, y, x) && squareScan(matrix, num, y, x)) {
+              matrix[y][x] = num;
+
+              if (solve(matrix)) return true;
+              else matrix[y][x] = 0;
             }
-            if (token) result.push(num);
           }
+
+          return false;
         }
       }
     }
 
-    return result;
+    return true;
   }
 
-  for (let y = 0; y < 9; y++) {
-    for (let x = 0; x < 9; x++) {
-      if (matrix[y][x] === 0) {
-        let posNum = possibleNumbers(y, x);
+  solve(matrix);
 
-        if (posNum.length === 1) {
-          matrix[y][x] = posNum[0];
-          solveSudoku(matrix);
-        }
-      }
-    }
-
-  }
-  return matrix
+  return matrix;
 }

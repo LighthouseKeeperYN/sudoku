@@ -1,3 +1,5 @@
+
+
 const initial = [
   [6, 5, 0, 7, 3, 0, 0, 8, 0],
   [0, 0, 0, 4, 8, 0, 5, 3, 0],
@@ -12,53 +14,54 @@ const initial = [
 
 function solveSudoku(matrix) {
 
+  function crossScan(matrixInput, numInput, row, col) {
+    for (let i = 0; i < 9; i++) {
+      if (matrixInput[row][i] === numInput) return false;
+      if (matrixInput[i][col] === numInput) return false;
+    }
+
+    return true;
+  }
+
+  function squareScan(matrixInput, numInput, row, col) {
+    let squareY = Math.floor(row / 3) * 3;
+    let squareX = Math.floor(col / 3) * 3;
+
+    for (let squareRow = 0; squareRow < 3; squareRow++) {
+      for (let squareCol = 0; squareCol < 3; squareCol++) {
+        if (row === 6 && col === 0) {
+        }
+
+        if (matrixInput[squareY + squareRow][squareX + squareCol] === numInput) return false;
+      }
+    }
+
+    return true;
+  }
+
   function getPossibleNumbers(matrixInput, y, x) {
+    let matrixOutput = matrixInput;
     let result = [];
 
     for (let num = 1; num < 10; num++) {
-      if (matrixInput[y].indexOf(num) === -1) {
-        for (let col = 0; col < 9; col++) {
-          if (matrixInput[col][x] === num) break
-          else if (col === 8) {
-            let boxY = Math.floor(y / 3) * 3;
-            let boxX = Math.floor(x / 3) * 3;
-            let token = true;
-
-            for (let boxCol = 0; boxCol < 3; boxCol++) {
-              for (let boxRow = 0; boxRow < 3; boxRow++) {
-                if (matrixInput[boxY + boxCol][boxX + boxRow] === num) {
-                  token = false;
-                  break;
-                }
-              }
-              if (!token) break;
-            }
-            if (token) result.push(num);
-          }
-        }
+      if (crossScan(matrixOutput, num, y, x) && squareScan(matrixOutput, num, y, x)) {
+        result.push(num);
       }
     }
 
     return result;
   }
 
-  function run(matrixInput) {
+  function* generatePossibleNumber(matrixInput, y, x) {
     let matrixOutput = matrixInput;
 
-    for (let y = 0; y < 9; y++) {
-      for (let x = 0; x < 9; x++) {
-        if (matrixOutput[y][x] === 0) {
-          let posNum = getPossibleNumbers(matrixOutput, y, x);
-
-          if (posNum.length === 1) {
-            matrixOutput[y][x] = posNum[0];
-            run(matrixOutput);
-          }
-        }
+    for (let num = 1; num < 10; num++) {
+      if (crossScan(matrixOutput, num, y, x) && squareScan(matrixOutput, num, y, x)) {
+        yield num;
       }
-    }
 
-    return matrixOutput;
+      return false;
+    }
   }
 
 
@@ -86,57 +89,42 @@ function solveSudoku(matrix) {
     return true;
   }
 
-  function isValid(numArrInput) {
-    for (let i = 0; i < numArrInput.length; i++) {
-      if (numArrInput[i][2].length === 0) return false;
+  function isValid(board, row, col, k) {
+    for (let i = 0; i < 9; i++) {
+      const m = 3 * Math.floor(row / 3) + Math.floor(i / 3);
+      const n = 3 * Math.floor(col / 3) + i % 3;
+      if (board[row][i] == k || board[i][col] == k || board[m][n] == k) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  function solve(matrix) {
+    for (let y = 0; y < 9; y++) {
+      for (let x = 0; x < 9; x++) {
+        if (matrix[y][x] === 0) {
+          for (let num = 1; num < 10; num++) {
+            if (crossScan(matrix, num, y, x) && squareScan(matrix, num, y, x)) {
+              matrix[y][x] = num;
+
+              if (solve(matrix)) return true;
+              else matrix[y][x] = 0;
+            }
+          }
+
+          return false;
+        }
+      }
     }
 
-    return true
+    return true;
   }
 
-  function makeAGuess(matrixInput, numIndex, numCount) {
-    let y = numArr[numIndex][0];
-    let x = numArr[numIndex][1];
-    let num = numArr[numIndex][2][numCount];
+  solve(matrix);
 
-    matrixInput[y][x] = num;
-
-    return matrixInput;
-  }
-
-  function tryToSolve(matrixInput, numArrInput) {
-    if (isFinished(matrixInput)) return matrixInput;
-
-    let matrixOutput = matrixInput;
-    let numArrOutput = numArrInput;
-
-    if (isValid(numArrOutput)) {
-      matrixOutput = run(matrixOutput);
-
-      if (isFinished(matrixOutput)) return matrixOutput;
-      else matrixOutput = makeAGuess(matrixOutput, currentNumPointer, numCountPointer);
-    }
-
-    return matrixOutput;
-  }
-
-  matrix = run(matrix);
-
-  let numArr = getPossibleNumbersAll(matrix);
-
-  let currentNumPointer = 0;
-  let numCountPointer = 0;
-
-  tryToSolve(matrixInput, numberCount)
-
-  if (isFinished(matrix)) return matrix;
-
-  if (isValid(numArr)) {
-    matrix = makeAGuess(matrix, numArr[0][0], numArr[0][1], 0, 0);
-  }
-
-
-  return matrix
+  return matrix;
 }
 console.log(solveSudoku(initial))
 
@@ -150,12 +138,3 @@ console.log(solveSudoku(initial))
 // [0, 0, 0, 0, 0, 0, 0, 0, 0],
 // [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-// [ [ 6, 5, 2, 7, 3, 1, 9, 8, 4 ],
-//   [ 9, 7, 1, 4, 8, 6, 5, 3, 2 ],
-//   [ 8, 4, 3, 9, 2, 5, 0, 0, 0 ],
-//   [ 0, 9, 4, 8, 0, 0, 0, 0, 0 ],
-//   [ 5, 3, 8, 2, 0, 9, 6, 0, 0 ],
-//   [ 0, 0, 6, 0, 0, 0, 8, 0, 0 ],
-//   [ 0, 0, 9, 0, 0, 0, 0, 0, 6 ],
-//   [ 0, 0, 7, 0, 0, 0, 0, 5, 0 ],
-//   [ 1, 6, 5, 3, 9, 2, 4, 7, 8 ] ]
